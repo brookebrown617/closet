@@ -1,10 +1,12 @@
 import { supabase } from '@/lib/supabase'
+import Item from '@/components/Item'
+
 
 export default async function Page() {
   const { data: items } = await supabase
     .from('items')
     .select('*')
-    .order('created_at', { ascending: true })
+    .order('title', { ascending: true })
 
   return (
     <main className="min-h-screen bg-neutral-50 text-neutral-800 px-6 py-20">
