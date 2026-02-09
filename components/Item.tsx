@@ -8,53 +8,88 @@ export default function Item({ item }) {
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const isClaimed = item.status === 'claimed'
+  // local copy for instant UI updates
+  const [currentItem, setCurrentItem] = useState(item)
+
+  const isClaimed = currentItem.status === 'claimed'
 
   async function handleClaim() {
     if (!name.trim()) return
 
     setLoading(true)
 
-    await supabase
+    const claimedAt = new Date().toISOString()
+
+    const { error } = await supabase
       .from('items')
       .update({
         status: 'claimed',
-        claimed_at: new Date().toISOString(),
+        claimed_at: claimedAt,
         claimed_by: name.trim(),
       })
-      .eq('id', item.id)
+      .eq('id', currentItem.id)
+
+    if (!error) {
+      // optimistic update — instant UI change
+      setCurrentItem({
+        ...currentItem,
+        status: 'claimed',
+        claimed_at: claimedAt,
+        claimed_by: name.trim(),
+      })
+
+      setOpen(false)
+    }
 
     setLoading(false)
   }
 
   return (
     <div className="space-y-3">
+      {/* Header */}
       <button
         onClick={() => setOpen(!open)}
         className="text-left w-full focus:outline-none"
       >
         <h2 className="text-sm font-medium text-neutral-900">
-          {item.title}
+          {currentItem.title}
         </h2>
         <p className="text-xs text-neutral-500">
-          {item.year} · size {item.size}
+          {currentItem.year} · size {currentItem.size}
         </p>
       </button>
 
+      {/* Expanded content */}
       {open && (
         <div className="space-y-4 pt-2">
-          <p className="text-sm text-neutral-800 leading-relaxed">
-            {item.story}
+          {/* Story */}
+          <p
+            className={`text-sm leading-relaxed ${
+              isClaimed ? 'text-neutral-600' : 'text-neutral-800'
+            }`}
+          >
+            {currentItem.story}
           </p>
 
-          {item.image_url && (
+          {/* Image */}
+            {currentItem.image_url && (
             <img
-              src={item.image_url}
-              alt=""
-              className="max-w-sm border border-neutral-200 bg-white"
+                src={currentItem.image_url}
+                alt=""
+                style={{
+                filter: isClaimed ? 'grayscale(30%)' : 'none',
+                }}
+                className="
+                max-w-sm
+                border
+                border-neutral-200
+                bg-white
+                "
             />
-          )}
+            )}
 
+
+          {/* Claim / Status */}
           {!isClaimed ? (
             <div className="space-y-2 pt-2">
               <input
@@ -88,10 +123,10 @@ export default function Item({ item }) {
             </div>
           ) : (
             <p className="text-xs text-neutral-500">
-              Transferred
-              {item.claimed_by && ` to ${item.claimed_by}`}
-              {item.claimed_at &&
-                ` · ${new Date(item.claimed_at).toLocaleDateString()}`}
+              Claimed
+              {currentItem.claimed_by && ` by ${currentItem.claimed_by}`}
+              {currentItem.claimed_at &&
+                ` · ${new Date(currentItem.claimed_at).toLocaleDateString()}`}
             </p>
           )}
         </div>
