@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import Item from '@/components/Item'
 
+export const revalidate = 0
 
 export default async function Page() {
   const { data: items } = await supabase
@@ -16,8 +17,8 @@ export default async function Page() {
         <header className="space-y-4">
           <h1 className="text-sm uppercase tracking-wide">Archive</h1>
           <p className="text-sm text-neutral-600">
-            These are clothes I’ve lived in.  
-            If something feels like it should be yours, take it.
+            These are clothes i'm finding a new home for.
+            If something feels like it should be yours, take it. &#9786;
           </p>
         </header>
 
